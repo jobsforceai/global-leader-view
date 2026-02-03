@@ -1,98 +1,75 @@
-import { BusinessIntelligenceClient } from "./_components/BusinessIntelligenceClient";
-import {
-  getHighGrowthLeaders,
-  getLeaderScorecards,
-  getDailyClosure,
-  getTopPerformers,
-  getTopRegions,
-  getVolumeTrends,
-  getWeakMarkets,
-} from "@/actions/bi";
-import { getCommunicationHealth, getFollowups } from "@/actions/communication";
-import { getDateRange } from "@/lib/date";
-import { getAuthTokenValue } from "@/actions/_core";
+import { Suspense } from "react";
+import { BusinessIntelligenceShell } from "./_components/BusinessIntelligenceShell";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { CeoVolumeTrendsSection } from "./_components/sections/CeoVolumeTrendsSection";
+import { CeoTopRegionsSection } from "./_components/sections/CeoTopRegionsSection";
+import { CeoCommunicationSection } from "./_components/sections/CeoCommunicationSection";
+import { CeoDailyClosureSection } from "./_components/sections/CeoDailyClosureSection";
+import { LeaderScorecardsSection } from "./_components/sections/LeaderScorecardsSection";
+import { HighGrowthLeadersSection } from "./_components/sections/HighGrowthLeadersSection";
+import { WeakMarketsSection } from "./_components/sections/WeakMarketsSection";
 
 export default async function BusinessIntelligencePage() {
-  const token = await getAuthTokenValue();
-  if (!token) {
-    return (
-      <BusinessIntelligenceClient
-        volumeDaily={[]}
-        volumeWeekly={[]}
-        volumeMonthly={[]}
-        topRegions={[]}
-        topPerformers={[]}
-        communicationMetrics={{
-          contactedLast7Days: 0,
-          contactedLast14Days: 0,
-          contactedLast30Days: 0,
-          overdueFollowups: 0,
-          totalLeaders: 0,
-        }}
-        weakAlerts={[]}
-        leaderScorecards={[]}
-        highGrowthLeaders={[]}
-        weakMarkets={[]}
-        dailyClosure={null}
-      />
-    );
-  }
-
-  const { startDate, endDate } = getDateRange(30);
-
-  const [volumeDaily, volumeWeekly, volumeMonthly] = await Promise.all([
-    getVolumeTrends("daily", startDate, endDate),
-    getVolumeTrends("weekly", startDate, endDate),
-    getVolumeTrends("monthly", startDate, endDate),
-  ]);
-
-  const [
-    topRegions,
-    topPerformers,
-    leaderScorecards,
-    highGrowthLeaders,
-    weakMarkets,
-    dailyClosure,
-    communication7,
-    communication14,
-    communication30,
-    followups,
-  ] = await Promise.all([
-    getTopRegions(startDate, endDate),
-    getTopPerformers(startDate, endDate),
-    getLeaderScorecards(startDate, endDate),
-    getHighGrowthLeaders(startDate, endDate),
-    getWeakMarkets(startDate, endDate),
-    getDailyClosure(new Date().toISOString().slice(0, 10)),
-    getCommunicationHealth(7),
-    getCommunicationHealth(14),
-    getCommunicationHealth(30),
-    getFollowups(),
-  ]);
-
-  const communicationMetrics = {
-    contactedLast7Days: communication7.summary.contactedLast7Days,
-    contactedLast14Days: communication14.summary.contactedLast14Days,
-    contactedLast30Days: communication30.summary.contactedLast30Days,
-    overdueFollowups: followups.filter((f) => f.status === "overdue").length,
-    totalLeaders: communication14.summary.totalLeaders,
-  };
-
-  const weakAlerts = weakMarkets.filter((m) => m.severity !== "low").slice(0, 4);
-
   return (
-    <BusinessIntelligenceClient
-      volumeDaily={volumeDaily}
-      volumeWeekly={volumeWeekly}
-      volumeMonthly={volumeMonthly}
-      topRegions={topRegions}
-      topPerformers={topPerformers}
-      communicationMetrics={communicationMetrics}
-    weakAlerts={weakAlerts}
-    leaderScorecards={leaderScorecards}
-    highGrowthLeaders={highGrowthLeaders}
-    weakMarkets={weakMarkets}
-    dailyClosure={dailyClosure}
-  />
+    <BusinessIntelligenceShell
+      ceoContent={
+        <>
+          <Suspense fallback={<CardSkeleton lines={6} />}>
+            <CeoVolumeTrendsSection />
+          </Suspense>
+          <Suspense fallback={<TwoUpSkeleton />}>
+            <CeoTopRegionsSection />
+          </Suspense>
+          <Suspense fallback={<TwoUpSkeleton />}>
+            <CeoCommunicationSection />
+          </Suspense>
+          <Suspense fallback={<CardSkeleton lines={4} />}>
+            <CeoDailyClosureSection />
+          </Suspense>
+        </>
+      }
+      scorecardsContent={
+        <Suspense fallback={<CardSkeleton lines={8} />}>
+          <LeaderScorecardsSection />
+        </Suspense>
+      }
+      growthContent={
+        <Suspense fallback={<CardSkeleton lines={8} />}>
+          <HighGrowthLeadersSection />
+        </Suspense>
+      }
+      weakContent={
+        <Suspense fallback={<CardSkeleton lines={8} />}>
+          <WeakMarketsSection />
+        </Suspense>
+      }
+    />
+  );
+}
+
+function CardSkeleton({ lines = 5 }: { lines?: number }) {
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="h-5 w-40 bg-muted rounded animate-pulse" />
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {Array.from({ length: lines }).map((_, index) => (
+          <div
+            key={index}
+            className="h-3 w-full bg-muted/70 rounded animate-pulse"
+          />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function TwoUpSkeleton() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <CardSkeleton lines={4} />
+      <CardSkeleton lines={4} />
+    </div>
   );
 }
