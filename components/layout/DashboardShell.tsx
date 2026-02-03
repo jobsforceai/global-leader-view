@@ -4,6 +4,7 @@ import { useState, ReactNode, createContext, useContext } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar, TopNav, StickyKpiStrip } from "@/components/layout";
 import { NAV_ROUTES, UserRole } from "@/lib/constants";
+import { KpiData } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface DashboardContextType {
@@ -30,9 +31,10 @@ export function useDashboard() {
 
 interface DashboardShellProps {
   children: ReactNode;
+  kpiData?: KpiData[];
 }
 
-export function DashboardShell({ children }: DashboardShellProps) {
+export function DashboardShell({ children, kpiData }: DashboardShellProps) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState("30d");
@@ -79,7 +81,10 @@ export function DashboardShell({ children }: DashboardShellProps) {
         />
 
         {/* Sticky KPI Strip */}
-        <StickyKpiStrip sidebarCollapsed={sidebarCollapsed} />
+        <StickyKpiStrip
+          sidebarCollapsed={sidebarCollapsed}
+          data={kpiData}
+        />
 
         {/* Main Content */}
         <main

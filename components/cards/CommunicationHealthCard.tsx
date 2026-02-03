@@ -2,7 +2,7 @@
 
 import { Phone, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CommunicationMetrics } from "@/lib/mock-data";
+import { CommunicationMetrics } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface CommunicationHealthCardProps {

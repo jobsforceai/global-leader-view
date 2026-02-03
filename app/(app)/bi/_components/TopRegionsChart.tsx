@@ -1,52 +1,58 @@
 "use client";
 
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Cell,
 } from "recharts";
-import { VolumeDataPoint } from "@/lib/types";
+import { TopRegion } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 
-interface VolumeChartProps {
-  data: VolumeDataPoint[];
+interface TopRegionsChartProps {
+  data: TopRegion[];
 }
 
-export function VolumeChart({ data }: VolumeChartProps) {
+const COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--primary) / 0.85)",
+  "hsl(var(--primary) / 0.7)",
+  "hsl(var(--primary) / 0.55)",
+  "hsl(var(--primary) / 0.4)",
+];
+
+export function TopRegionsChart({ data }: TopRegionsChartProps) {
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <AreaChart
+    <ResponsiveContainer width="100%" height={280}>
+      <BarChart
         data={data}
-        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+        layout="vertical"
+        margin={{ top: 10, right: 30, left: 80, bottom: 10 }}
       >
-        <defs>
-          <linearGradient id="volumeGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-          </linearGradient>
-        </defs>
         <CartesianGrid
           strokeDasharray="3 3"
+          horizontal={true}
           vertical={false}
           stroke="hsl(var(--border))"
         />
         <XAxis
-          dataKey="date"
-          axisLine={false}
-          tickLine={false}
-          tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-          dy={10}
-        />
-        <YAxis
+          type="number"
           axisLine={false}
           tickLine={false}
           tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
           tickFormatter={(value) => formatCurrency(value)}
-          dx={-10}
+        />
+        <YAxis
+          type="category"
+          dataKey="name"
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
+          width={70}
         />
         <Tooltip
           contentStyle={{
@@ -58,14 +64,12 @@ export function VolumeChart({ data }: VolumeChartProps) {
           labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
           formatter={(value) => [formatCurrency(value as number), "Volume"]}
         />
-        <Area
-          type="monotone"
-          dataKey="value"
-          stroke="hsl(var(--primary))"
-          strokeWidth={2}
-          fill="url(#volumeGradient)"
-        />
-      </AreaChart>
+        <Bar dataKey="businessVolume" radius={[0, 4, 4, 0]}>
+          {data.map((_, index) => (
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          ))}
+        </Bar>
+      </BarChart>
     </ResponsiveContainer>
   );
 }

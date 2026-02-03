@@ -20,11 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MarketAlert } from "@/lib/mock-data";
+import { MarketIntervention } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface MarketsInterventionTableProps {
-  alerts: MarketAlert[];
+  alerts: MarketIntervention[];
 }
 
 const severityColors = {
@@ -95,9 +95,11 @@ export function MarketsInterventionTable({
               <TableHeader>
                 <TableRow>
                   <TableHead>Market</TableHead>
-                  <TableHead>Alert Type</TableHead>
+                  <TableHead>Reason</TableHead>
                   <TableHead>Severity</TableHead>
-                  <TableHead className="hidden md:table-cell">Reason</TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    Change
+                  </TableHead>
                   <TableHead className="hidden lg:table-cell">
                     Assigned Owner
                   </TableHead>
@@ -111,7 +113,9 @@ export function MarketsInterventionTable({
                     className="cursor-pointer hover:bg-muted/50"
                   >
                     <TableCell className="font-medium">{alert.market}</TableCell>
-                    <TableCell>{alert.alertType}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {alert.reason}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant="secondary"
@@ -121,17 +125,22 @@ export function MarketsInterventionTable({
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-muted-foreground">
-                      {alert.reason}
+                      {alert.changePercent !== undefined
+                        ? `${alert.changePercent > 0 ? "+" : ""}${alert.changePercent}%`
+                        : "-"}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
-                      {alert.assignedOwner}
+                      {alert.assignedOwner || "Unassigned"}
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant="secondary"
-                        className={cn("capitalize", statusColors[alert.status])}
+                        className={cn(
+                          "capitalize",
+                          statusColors[alert.status || "open"]
+                        )}
                       >
-                        {alert.status.replace("-", " ")}
+                        {(alert.status || "open").replace("-", " ")}
                       </Badge>
                     </TableCell>
                   </TableRow>

@@ -3,7 +3,7 @@
 import { TrendingDown, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LeaderSnapshot } from "@/lib/mock-data";
+import { LeaderSnapshot } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface StagnatingLeadersCardProps {
@@ -36,18 +36,28 @@ export function StagnatingLeadersCard({ leaders }: StagnatingLeadersCardProps) {
                 <div>
                   <p className="text-sm font-medium">{leader.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {leader.city}, {leader.country}
+                    {leader.city || leader.country
+                      ? `${leader.city || ""}${
+                          leader.city && leader.country ? ", " : ""
+                        }${leader.country || ""}`
+                      : "Location unavailable"}
+                    {" "}
+                    <span className="text-muted-foreground/80">
+                      ({leader.id})
+                    </span>
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="text-xs">
-                  {leader.reasonTag}
+                  {leader.reasonTag || "Negative Growth"}
                 </Badge>
                 <div className="flex items-center gap-1 text-amber-500">
                   <TrendingDown className="h-3 w-3" />
                   <span className="text-xs font-medium">
-                    {leader.daysStagnant}d
+                    {leader.daysStagnant !== undefined
+                      ? `${leader.daysStagnant}d`
+                      : `${leader.growthPercent ?? 0}%`}
                   </span>
                 </div>
               </div>

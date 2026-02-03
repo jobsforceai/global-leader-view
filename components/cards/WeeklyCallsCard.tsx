@@ -3,7 +3,7 @@
 import { Video, TrendingUp, TrendingDown, UserX, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { WeeklyCallsMetrics } from "@/lib/mock-data";
+import { WeeklyCallsMetrics } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface WeeklyCallsCardProps {

@@ -10,15 +10,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { KPI_DEFINITIONS, MOCK_KPI_DATA } from "@/lib/constants";
+import { KPI_DEFINITIONS } from "@/lib/constants";
 import { formatValue, cn } from "@/lib/utils";
-
-interface KpiData {
-  id: string;
-  value: number;
-  trend: number;
-  trendDirection: "up" | "down" | "neutral";
-}
+import { KpiData } from "@/lib/types";
 
 interface StickyKpiStripProps {
   data?: KpiData[];
@@ -26,9 +20,10 @@ interface StickyKpiStripProps {
 }
 
 export function StickyKpiStrip({
-  data = MOCK_KPI_DATA,
+  data,
   sidebarCollapsed,
 }: StickyKpiStripProps) {
+  const kpis = data ?? [];
   const [selectedKpi, setSelectedKpi] = useState<string | null>(null);
 
   const getKpiDefinition = (id: string) => {
@@ -57,7 +52,9 @@ export function StickyKpiStrip({
     }
   };
 
-  const selectedKpiData = data.find((kpi) => kpi.id === selectedKpi);
+  const selectedKpiData = (data ?? kpis).find(
+    (kpi) => kpi.id === selectedKpi
+  );
   const selectedKpiDef = selectedKpi ? getKpiDefinition(selectedKpi) : null;
 
   return (
@@ -69,7 +66,12 @@ export function StickyKpiStrip({
         )}
       >
         <div className="flex items-center gap-2 px-4 py-3 overflow-x-auto">
-          {data.map((kpi) => {
+          {kpis.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              KPI data unavailable
+            </p>
+          ) : (
+            kpis.map((kpi) => {
             const definition = getKpiDefinition(kpi.id);
             if (!definition) return null;
 
@@ -107,7 +109,8 @@ export function StickyKpiStrip({
                 </div>
               </Card>
             );
-          })}
+          })
+          )}
         </div>
       </div>
 
