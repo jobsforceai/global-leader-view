@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const API_BASE = "/api/gv";
-console.log("API_BASE is", process.env.NEXT_PUBLIC_GLOBALVIEW_API_BASE_URL ,"testing");
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -48,6 +47,9 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Global View Login</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Sign in to access the dashboard.
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">

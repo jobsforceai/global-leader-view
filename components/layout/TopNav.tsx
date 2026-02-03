@@ -1,6 +1,7 @@
 "use client";
 
-import { Globe, Calendar, User, Moon, Sun } from "lucide-react";
+import { useState } from "react";
+import { Globe, Calendar, User, Moon, Sun, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,6 +30,7 @@ export function TopNav({
   onGeographyChange,
   sidebarCollapsed,
 }: TopNavProps) {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const timeRangeLabel =
     TIME_RANGE_OPTIONS.find((opt) => opt.value === selectedTimeRange)?.label ||
     "Select";
@@ -42,6 +44,15 @@ export function TopNav({
     regional_director: "Regional Director",
     manager: "Manager",
     analyst: "Analyst",
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await fetch("/api/gv/logout", { method: "POST" });
+    } finally {
+      window.location.href = "/login";
+    }
   };
 
   return (
@@ -118,6 +129,20 @@ export function TopNav({
               {roleDisplayName[userRole]}
             </Badge>
           </div>
+
+          {/* Logout */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-2"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {isLoggingOut ? "Logging out" : "Logout"}
+            </span>
+          </Button>
         </div>
       </div>
     </header>
