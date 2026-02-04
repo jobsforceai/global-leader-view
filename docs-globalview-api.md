@@ -472,6 +472,8 @@ Leader scorecards.
 Query params:
 - `userIds` (comma-separated list, optional)
 - `startDate`, `endDate`
+- `page`, `limit`
+- `search` (matches userId/fullName/country/region/city)
 
 Response (200):
 ```
@@ -500,7 +502,8 @@ Response (200):
         "weak": [ { "userId": "U201", "volume": 900 } ]
       }
     }
-  ]
+  ],
+  "pagination": { "currentPage": 1, "totalPages": 5, "totalCount": 87 }
 }
 ```
 
@@ -898,6 +901,14 @@ Super Admin only. Delete Global View user.
 Response (200):
 ```
 { "message": "Global View user deleted.", "user": { "gvUserId": "GV001", "role": "CHIEF" } }
+```
+
+### POST /admin/globalview/cache/clear
+Super Admin only. Clear all Global View cache keys.
+
+Response (200):
+```
+{ "message": "Global View cache cleared." }
 ```
 
 ---

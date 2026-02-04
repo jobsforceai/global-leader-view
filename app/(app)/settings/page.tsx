@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Settings } from "lucide-react";
+import { CacheControls } from "./_components/CacheControls";
 
 export default function SettingsPage() {
   return (
@@ -20,6 +21,8 @@ export default function SettingsPage() {
           </p>
         </CardContent>
       </Card>
+
+      <CacheControls />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -93,6 +93,18 @@ export function LeaderScorecards({ leaders }: LeaderScorecardsProps) {
   );
   const [showDrawer, setShowDrawer] = useState(false);
 
+  useEffect(() => {
+    if (!leaders.length) {
+      setSelectedLeaderId("");
+      setShowDrawer(false);
+      return;
+    }
+
+    if (!leaders.find((leader) => leader.id === selectedLeaderId)) {
+      setSelectedLeaderId(leaders[0].id);
+    }
+  }, [leaders, selectedLeaderId]);
+
   const selectedLeader = leaders.find((l) => l.id === selectedLeaderId);
   const statusKey = selectedLeader?.status || "active";
   const consistencyKey =
@@ -136,7 +148,7 @@ export function LeaderScorecards({ leaders }: LeaderScorecardsProps) {
         </Card>
 
         {/* Scorecard Preview */}
-        {selectedLeader && (
+        {selectedLeader ? (
           <Card
             className="cursor-pointer hover:border-primary/50 transition-colors"
             onClick={() => setShowDrawer(true)}
@@ -213,6 +225,12 @@ export function LeaderScorecards({ leaders }: LeaderScorecardsProps) {
               <p className="text-xs text-muted-foreground mt-4">
                 Click to view full scorecard →
               </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="py-8 text-center text-sm text-muted-foreground">
+              No leaders found for this search.
             </CardContent>
           </Card>
         )}
