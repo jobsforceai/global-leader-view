@@ -78,91 +78,171 @@ export function WeeklyBoardTable({
             No weekly board data available
           </div>
         ) : (
-          <div className="rounded-md border">
-            <Table>
+          <>
+            <div className="space-y-3 sm:hidden">
+              {filteredLeaders.map((leader) => (
+                <div key={leader.id} className="rounded-md border p-3 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium">{leader.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {leader.market || "Market unavailable"} • {leader.phone || "Phone —"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        ID: {leader.id}
+                      </p>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className={cn(statusColors[getStatusValue(leader)])}
+                    >
+                      {getStatusValue(leader).replace("_", " ")}
+                    </Badge>
+                  </div>
+
+                  <div className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">Follow-up:</span>{" "}
+                    {leader.followUp
+                      ? `${leader.followUp.status} • ${leader.followUp.dueDate}`
+                      : "—"}
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Update Status
+                    </p>
+                    <Select
+                      value={getStatusValue(leader)}
+                      onValueChange={(value) => {
+                        const nextStatus = value as WeeklyBoardLeader["status"];
+                        setLocalStatus((prev) => ({
+                          ...prev,
+                          [leader.id]: nextStatus,
+                        }));
+                        setUpdatingId(leader.id);
+                        startTransition(async () => {
+                          try {
+                            await updateWeeklyStatus({
+                              leaderUserId: leader.id,
+                              date: weekStart,
+                              status: nextStatus,
+                            });
+                          } finally {
+                            setUpdatingId(null);
+                          }
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="h-9 w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATUS_OPTIONS.map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status.replace("_", " ")}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {updatingId === leader.id && (
+                      <p className="text-xs text-muted-foreground">
+                        Updating...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden sm:block rounded-md border">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Leader</TableHead>
                   <TableHead className="hidden sm:table-cell">Phone</TableHead>
                   <TableHead className="hidden md:table-cell">Market</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="hidden lg:table-cell">Follow-up</TableHead>
-                  <TableHead className="hidden xl:table-cell">Update Status</TableHead>
+                  <TableHead className="hidden md:table-cell">Follow-up</TableHead>
+                  <TableHead className="hidden md:table-cell">Update Status</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {filteredLeaders.map((leader) => (
-                  <TableRow key={leader.id}>
-                    <TableCell className="font-medium">
-                      <div>
-                        <p>{leader.name}</p>
-                        <p className="text-xs text-muted-foreground">({leader.id})</p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell text-muted-foreground">
-                      {leader.phone || "—"}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">
-                      {leader.market}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={cn(statusColors[getStatusValue(leader)])}
-                      >
-                        {getStatusValue(leader).replace("_", " ")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell text-muted-foreground">
-                      {leader.followUp
-                        ? `${leader.followUp.status} • ${leader.followUp.dueDate}`
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell">
-                      <Select
-                        value={getStatusValue(leader)}
-                        onValueChange={(value) => {
-                          const nextStatus = value as WeeklyBoardLeader["status"];
-                          setLocalStatus((prev) => ({
-                            ...prev,
-                            [leader.id]: nextStatus,
-                          }));
-                          setUpdatingId(leader.id);
-                          startTransition(async () => {
-                            try {
-                              await updateWeeklyStatus({
-                                leaderUserId: leader.id,
-                                date: weekStart,
-                                status: nextStatus,
-                              });
-                            } finally {
-                              setUpdatingId(null);
-                            }
-                          });
-                        }}
-                      >
-                        <SelectTrigger className="h-8 w-[190px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATUS_OPTIONS.map((status) => (
-                            <SelectItem key={status} value={status}>
-                              {status.replace("_", " ")}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {updatingId === leader.id && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Updating...
-                        </p>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                <TableBody>
+                  {filteredLeaders.map((leader) => (
+                    <TableRow key={leader.id}>
+                      <TableCell className="font-medium">
+                        <div>
+                          <p>{leader.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            ({leader.id})
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-muted-foreground">
+                        {leader.phone || "—"}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">
+                        {leader.market}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="secondary"
+                          className={cn(statusColors[getStatusValue(leader)])}
+                        >
+                          {getStatusValue(leader).replace("_", " ")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">
+                        {leader.followUp
+                          ? `${leader.followUp.status} • ${leader.followUp.dueDate}`
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <Select
+                          value={getStatusValue(leader)}
+                          onValueChange={(value) => {
+                            const nextStatus =
+                              value as WeeklyBoardLeader["status"];
+                            setLocalStatus((prev) => ({
+                              ...prev,
+                              [leader.id]: nextStatus,
+                            }));
+                            setUpdatingId(leader.id);
+                            startTransition(async () => {
+                              try {
+                                await updateWeeklyStatus({
+                                  leaderUserId: leader.id,
+                                  date: weekStart,
+                                  status: nextStatus,
+                                });
+                              } finally {
+                                setUpdatingId(null);
+                              }
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="h-8 w-[190px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUS_OPTIONS.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status.replace("_", " ")}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {updatingId === leader.id && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Updating...
+                          </p>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
