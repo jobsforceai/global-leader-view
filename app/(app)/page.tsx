@@ -1,99 +1,67 @@
-import { CommandCenterClient } from "@/app/_components/CommandCenterClient";
-import {
-  getMarketsNeedingIntervention,
-  getTopLeaders,
-  getVolumeTrends,
-} from "@/actions/bi";
-import { getCommunicationHealth, getFollowups } from "@/actions/communication";
-import { getWeeklyCallsMetrics } from "@/actions/calls";
-import { getDateRange } from "@/lib/date";
-import { getAuthTokenValue } from "@/actions/_core";
+import { Suspense } from "react";
+import { CommandCenterShell } from "@/app/_components/CommandCenterShell";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { CommandCenterVolumeSection } from "@/app/_components/sections/CommandCenterVolumeSection";
+import { CommandCenterTopLeadersSection } from "@/app/_components/sections/CommandCenterTopLeadersSection";
+import { CommandCenterMarketsSection } from "@/app/_components/sections/CommandCenterMarketsSection";
+import { CommandCenterCommunicationSection } from "@/app/_components/sections/CommandCenterCommunicationSection";
+import { CommandCenterWeeklyCallsSection } from "@/app/_components/sections/CommandCenterWeeklyCallsSection";
 
 export default async function CommandCenterPage() {
-  const token = await getAuthTokenValue();
-  if (!token) {
-    return (
-      <CommandCenterClient
-        volumeDaily={[]}
-        volumeWeekly={[]}
-        volumeMonthly={[]}
-        topLeaders={[]}
-        teamTopLeaders={[]}
-        marketInterventions={[]}
-        communicationMetrics={{
-          contactedLast7Days: 0,
-          contactedLast14Days: 0,
-          contactedLast30Days: 0,
-          overdueFollowups: 0,
-          totalLeaders: 0,
-        }}
-        weeklyCallsMetrics={{
-          attendancePercent: 0,
-          lastWeekAttendancePercent: 0,
-          noShowCount: 0,
-          missedConsecutiveCount: 0,
-        }}
-      />
-    );
-  }
-
-  const { startDate, endDate } = getDateRange(30);
-
-  const [volumeDaily, volumeWeekly, volumeMonthly] = await Promise.all([
-    getVolumeTrends("daily", startDate, endDate),
-    getVolumeTrends("weekly", startDate, endDate),
-    getVolumeTrends("monthly", startDate, endDate),
-  ]);
-
-  const [topLeaders, teamTopLeaders, marketInterventions] = await Promise.all([
-    getTopLeaders(startDate, endDate, "self"),
-    getTopLeaders(startDate, endDate, "team"),
-    getMarketsNeedingIntervention(startDate, endDate),
-  ]);
-
-  const [communication7, communication14, communication30, followups] =
-    await Promise.all([
-      getCommunicationHealth(7),
-      getCommunicationHealth(14),
-      getCommunicationHealth(30),
-      getFollowups(),
-    ]);
-
-  const overdueFollowups = followups.filter((f) => f.status === "overdue").length;
-
-  const communicationMetrics = {
-    contactedLast7Days: communication7.summary.contactedLast7Days,
-    contactedLast14Days: communication14.summary.contactedLast14Days,
-    contactedLast30Days: communication30.summary.contactedLast30Days,
-    overdueFollowups,
-    totalLeaders: communication14.summary.totalLeaders,
-    avgDaysSinceContact: communication14.summary.avgDaysSinceContact,
-  };
-
-  const weeklyCallsMetrics = await getWeeklyCallsMetrics();
-
-  console.log("[CommandCenter] volumeDaily:", volumeDaily.length);
-  console.log("[CommandCenter] volumeWeekly:", volumeWeekly.length);
-  console.log("[CommandCenter] volumeMonthly:", volumeMonthly.length);
-  console.log("[CommandCenter] topLeaders:", topLeaders.length);
-  console.log("[CommandCenter] teamTopLeaders:", teamTopLeaders.length);
-  console.log(
-    "[CommandCenter] marketInterventions:",
-    marketInterventions.length
-  );
-  console.log("[CommandCenter] communicationMetrics:", communicationMetrics);
-  console.log("[CommandCenter] weeklyCallsMetrics:", weeklyCallsMetrics);
-
   return (
-    <CommandCenterClient
-      volumeDaily={volumeDaily}
-      volumeWeekly={volumeWeekly}
-      volumeMonthly={volumeMonthly}
-      topLeaders={topLeaders}
-      teamTopLeaders={teamTopLeaders}
-      marketInterventions={marketInterventions}
-      communicationMetrics={communicationMetrics}
-      weeklyCallsMetrics={weeklyCallsMetrics}
+    <CommandCenterShell
+      volumeContent={
+        <Suspense fallback={<CardSkeleton lines={6} />}>
+          <CommandCenterVolumeSection />
+        </Suspense>
+      }
+      topLeadersContent={
+        <Suspense fallback={<TwoUpSkeleton />}>
+          <CommandCenterTopLeadersSection />
+        </Suspense>
+      }
+      marketsContent={
+        <Suspense fallback={<CardSkeleton lines={6} />}>
+          <CommandCenterMarketsSection />
+        </Suspense>
+      }
+      communicationContent={
+        <Suspense fallback={<CardSkeleton lines={4} />}>
+          <CommandCenterCommunicationSection />
+        </Suspense>
+      }
+      callsContent={
+        <Suspense fallback={<CardSkeleton lines={4} />}>
+          <CommandCenterWeeklyCallsSection />
+        </Suspense>
+      }
     />
+  );
+}
+
+function CardSkeleton({ lines = 5 }: { lines?: number }) {
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="h-5 w-40 bg-muted rounded animate-pulse" />
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {Array.from({ length: lines }).map((_, index) => (
+          <div
+            key={index}
+            className="h-3 w-full bg-muted/70 rounded animate-pulse"
+          />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function TwoUpSkeleton() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <CardSkeleton lines={4} />
+      <CardSkeleton lines={4} />
+    </div>
   );
 }
