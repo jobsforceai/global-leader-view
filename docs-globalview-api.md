@@ -91,6 +91,10 @@ Response (200):
       "region": "South",
       "city": "Hyderabad",
       "lastActivityAt": "2026-02-03T10:00:00.000Z",
+      "totalInvested": 3500,
+      "capTotal": 6250,
+      "capRemaining": 1200,
+      "status": "active",
       "isPackageActive": true,
       "packageUSD": 1000,
       "activeLegsCount": 2,
@@ -183,6 +187,9 @@ Request body:
   "notes": "Reached on WhatsApp"
 }
 ```
+
+Notes:
+- When `status` = `NEED_FOLLOWUP`, `notes` is required.
 
 Response (200):
 ```
@@ -611,27 +618,27 @@ Response (200):
 ```
 
 ### GET /globalview/bi/daily-closure
-Daily Closure Tracker (simplified).\n
-\n
-Query params:\n
-- `date` (optional ISO date; default = today)\n
-\n
-Response (200):\n
-```\n
-{\n
-  \"date\": \"2026-02-03T00:00:00.000Z\",\n
-  \"leadsGenerated\": 5,\n
-  \"newIds\": 3,\n
-  \"capitalCollected\": 12000,\n
-  \"presentationsDone\": null,\n
-  \"conversionRate\": null,\n
-  \"revenuePerDay\": null,\n
-  \"closers\": [\n
-    { \"sponsorId\": \"U010\", \"newIds\": 2 },\n
-    { \"sponsorId\": \"U020\", \"newIds\": 1 }\n
-  ]\n
-}\n
-```\n
+Daily Closure Tracker (simplified).
+
+Query params:
+- `date` (optional ISO date; default = today)
+
+Response (200):
+```
+{
+  "date": "2026-02-03T00:00:00.000Z",
+  "leadsGenerated": 5,
+  "newIds": 3,
+  "capitalCollected": 12000,
+  "presentationsDone": null,
+  "conversionRate": null,
+  "revenuePerDay": null,
+  "closers": [
+    { "sponsorId": "U010", "newIds": 2 },
+    { "sponsorId": "U020", "newIds": 1 }
+  ]
+}
+```
 ### GET /globalview/bi/top-regions
 Top markets by volume with growth percent.
 
@@ -655,6 +662,42 @@ Response (200):
 ```
 
 ---
+
+## Investors (Global View)
+
+### GET /globalview/investors
+List investors (lifetime total investments ≥ configured threshold).
+
+Query params:
+- `page`, `limit`
+- `search` (matches userId/fullName/email/phone)
+
+Response (200):
+```
+{
+  "investors": [
+    {
+      "userId": "U123",
+      "fullName": "Leader Name",
+      "email": "leader@example.com",
+      "phone": "+1...",
+      "country": "IN",
+      "region": "South",
+      "city": "Hyderabad",
+      "status": "active",
+      "isPackageActive": true,
+      "totalInvested": 2500,
+      "capTotal": 6250,
+      "capRemaining": 1200
+    }
+  ],
+  "pagination": { "currentPage": 1, "totalPages": 5, "totalCount": 87 }
+}
+```
+
+Notes:
+- Investor rule is configurable in `GLOBALVIEW_INVESTOR_RULES.minLifetimeInvestment`.
+- `capRemaining` uses current cycle earnings vs earnings cap.
 
 ## 6) Growth & Expansion (Module 3)
 

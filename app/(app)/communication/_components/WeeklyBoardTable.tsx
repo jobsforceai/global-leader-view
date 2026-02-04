@@ -14,6 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { WeeklyBoardLeader } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { updateWeeklyStatus } from "@/actions/communication";
 
 const statusColors: Record<WeeklyBoardLeader["status"], string> = {
@@ -40,6 +43,10 @@ export function WeeklyBoardTable({
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [localStatus, setLocalStatus] = useState<Record<string, WeeklyBoardLeader["status"]>>({});
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+  const [pendingLeader, setPendingLeader] = useState<WeeklyBoardLeader | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<WeeklyBoardLeader["status"] | null>(null);
+  const [statusNotes, setStatusNotes] = useState("");
   const [, startTransition] = useTransition();
 
   const filteredLeaders = useMemo(() => {
@@ -49,6 +56,62 @@ export function WeeklyBoardTable({
 
   const getStatusValue = (leader: WeeklyBoardLeader) =>
     localStatus[leader.id] || leader.status;
+
+  const handleStatusUpdate = (
+    leader: WeeklyBoardLeader,
+    nextStatus: WeeklyBoardLeader["status"]
+  ) => {
+    if (nextStatus === "NEED_FOLLOWUP") {
+      setPendingLeader(leader);
+      setPendingStatus(nextStatus);
+      setStatusNotes(leader.statusNotes || "");
+      setNotesDialogOpen(true);
+      return;
+    }
+
+    setLocalStatus((prev) => ({
+      ...prev,
+      [leader.id]: nextStatus,
+    }));
+    setUpdatingId(leader.id);
+    startTransition(async () => {
+      try {
+        await updateWeeklyStatus({
+          leaderUserId: leader.id,
+          date: weekStart,
+          status: nextStatus,
+        });
+      } finally {
+        setUpdatingId(null);
+      }
+    });
+  };
+
+  const handleNotesSubmit = () => {
+    if (!pendingLeader || !pendingStatus) return;
+    const notes = statusNotes.trim();
+    if (!notes) return;
+
+    const leaderId = pendingLeader.id;
+    setLocalStatus((prev) => ({
+      ...prev,
+      [leaderId]: pendingStatus,
+    }));
+    setUpdatingId(leaderId);
+    setNotesDialogOpen(false);
+    startTransition(async () => {
+      try {
+        await updateWeeklyStatus({
+          leaderUserId: leaderId,
+          date: weekStart,
+          status: pendingStatus,
+          notes,
+        });
+      } finally {
+        setUpdatingId(null);
+      }
+    });
+  };
 
   return (
     <Card>
@@ -105,6 +168,11 @@ export function WeeklyBoardTable({
                     {leader.followUp
                       ? `${leader.followUp.status} • ${leader.followUp.dueDate}`
                       : "—"}
+                    {leader.statusNotes && (
+                      <span className="block text-xs text-muted-foreground mt-1">
+                        Notes: {leader.statusNotes}
+                      </span>
+                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -113,25 +181,12 @@ export function WeeklyBoardTable({
                     </p>
                     <Select
                       value={getStatusValue(leader)}
-                      onValueChange={(value) => {
-                        const nextStatus = value as WeeklyBoardLeader["status"];
-                        setLocalStatus((prev) => ({
-                          ...prev,
-                          [leader.id]: nextStatus,
-                        }));
-                        setUpdatingId(leader.id);
-                        startTransition(async () => {
-                          try {
-                            await updateWeeklyStatus({
-                              leaderUserId: leader.id,
-                              date: weekStart,
-                              status: nextStatus,
-                            });
-                          } finally {
-                            setUpdatingId(null);
-                          }
-                        });
-                      }}
+                      onValueChange={(value) =>
+                        handleStatusUpdate(
+                          leader,
+                          value as WeeklyBoardLeader["status"]
+                        )
+                      }
                     >
                       <SelectTrigger className="h-9 w-full">
                         <SelectValue />
@@ -192,33 +247,28 @@ export function WeeklyBoardTable({
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-muted-foreground">
-                        {leader.followUp
-                          ? `${leader.followUp.status} • ${leader.followUp.dueDate}`
-                          : "—"}
+                        <div className="space-y-1 text-xs">
+                          <p>
+                            {leader.followUp
+                              ? `${leader.followUp.status} • ${leader.followUp.dueDate}`
+                              : "—"}
+                          </p>
+                          {leader.statusNotes && (
+                            <p className="text-muted-foreground">
+                              Notes: {leader.statusNotes}
+                            </p>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         <Select
                           value={getStatusValue(leader)}
-                          onValueChange={(value) => {
-                            const nextStatus =
-                              value as WeeklyBoardLeader["status"];
-                            setLocalStatus((prev) => ({
-                              ...prev,
-                              [leader.id]: nextStatus,
-                            }));
-                            setUpdatingId(leader.id);
-                            startTransition(async () => {
-                              try {
-                                await updateWeeklyStatus({
-                                  leaderUserId: leader.id,
-                                  date: weekStart,
-                                  status: nextStatus,
-                                });
-                              } finally {
-                                setUpdatingId(null);
-                              }
-                            });
-                          }}
+                          onValueChange={(value) =>
+                            handleStatusUpdate(
+                              leader,
+                              value as WeeklyBoardLeader["status"]
+                            )
+                          }
                         >
                           <SelectTrigger className="h-8 w-[190px]">
                             <SelectValue />
@@ -245,6 +295,42 @@ export function WeeklyBoardTable({
           </>
         )}
       </CardContent>
+
+      <Dialog open={notesDialogOpen} onOpenChange={setNotesDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Follow-up Notes Required</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Add notes for setting status to Need Follow-up.
+            </p>
+            <Textarea
+              value={statusNotes}
+              onChange={(event) => setStatusNotes(event.target.value)}
+              placeholder="Reached on WhatsApp, needs follow-up..."
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setNotesDialogOpen(false);
+                setPendingLeader(null);
+                setPendingStatus(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleNotesSubmit}
+              disabled={!statusNotes.trim() || !pendingLeader}
+            >
+              Save Status
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

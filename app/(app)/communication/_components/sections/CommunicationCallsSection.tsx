@@ -1,11 +1,9 @@
 import { getCalls, getWeeklyCallsMetrics } from "@/actions/calls";
 import { getWeeklyBoardData, getWeeklySummary } from "@/actions/communication";
-import {
-  CallsSummaryMetrics,
-  WeeklyCallsTable,
-} from "../index";
+import { CallsSummaryMetrics } from "../index";
 import { WeeklyBoardTable } from "../WeeklyBoardTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CommunicationInvestorsSection } from "./CommunicationInvestorsSection";
 
 export async function CommunicationCallsSection() {
   try {
@@ -27,8 +25,6 @@ export async function CommunicationCallsSection() {
           noShowCount={weeklyCallsMetrics.noShowCount}
           missedConsecutiveCount={weeklyCallsMetrics.missedConsecutiveCount}
         />
-
-        <WeeklyCallsTable calls={weeklyCalls} />
 
         <Card>
           <CardHeader className="pb-3">
@@ -76,6 +72,8 @@ export async function CommunicationCallsSection() {
           leaders={weeklyBoardData.leaders}
           weekStart={weeklyBoardData.weekStart}
         />
+
+        <CommunicationInvestorsSection />
       </>
     );
   } catch {
@@ -87,8 +85,6 @@ export async function CommunicationCallsSection() {
           noShowCount={0}
           missedConsecutiveCount={0}
         />
-
-        <WeeklyCallsTable calls={[]} />
 
         <Card>
           <CardHeader className="pb-3">
@@ -104,6 +100,8 @@ export async function CommunicationCallsSection() {
         </Card>
 
         <WeeklyBoardTable leaders={[]} weekStart={new Date().toISOString()} />
+
+        <CommunicationInvestorsSection />
       </>
     );
   }

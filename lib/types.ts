@@ -191,6 +191,21 @@ export interface HighGrowthLeader {
   previousValue: number;
 }
 
+export interface Investor {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  status: string | null;
+  isPackageActive: boolean;
+  totalInvested: number;
+  capTotal: number;
+  capRemaining: number;
+}
+
 export interface BiFilters {
   timeRange: string;
   country: string;

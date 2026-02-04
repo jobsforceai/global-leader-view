@@ -8,6 +8,7 @@ import { CeoDailyClosureSection } from "./_components/sections/CeoDailyClosureSe
 import { LeaderScorecardsSection } from "./_components/sections/LeaderScorecardsSection";
 import { HighGrowthLeadersSection } from "./_components/sections/HighGrowthLeadersSection";
 import { WeakMarketsSection } from "./_components/sections/WeakMarketsSection";
+import { InvestorsSection } from "./_components/sections/InvestorsSection";
 
 export default async function BusinessIntelligencePage() {
   return (
@@ -41,6 +42,11 @@ export default async function BusinessIntelligencePage() {
       weakContent={
         <Suspense fallback={<CardSkeleton lines={8} />}>
           <WeakMarketsSection />
+        </Suspense>
+      }
+      investorsContent={
+        <Suspense fallback={<CardSkeleton lines={8} />}>
+          <InvestorsSection />
         </Suspense>
       }
     />

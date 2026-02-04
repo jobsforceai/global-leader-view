@@ -3,7 +3,6 @@ import { CommunicationShell } from "./_components/CommunicationShell";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CommunicationHealthSection } from "./_components/sections/CommunicationHealthSection";
 import { CommunicationCallsSection } from "./_components/sections/CommunicationCallsSection";
-import { CommunicationFollowupsSection } from "./_components/sections/CommunicationFollowupsSection";
 
 export default async function CommunicationPage() {
   return (
@@ -16,11 +15,6 @@ export default async function CommunicationPage() {
       callsContent={
         <Suspense fallback={<CardSkeleton lines={6} />}>
           <CommunicationCallsSection />
-        </Suspense>
-      }
-      followupsContent={
-        <Suspense fallback={<CardSkeleton lines={6} />}>
-          <CommunicationFollowupsSection />
         </Suspense>
       }
     />

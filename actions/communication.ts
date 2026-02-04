@@ -9,6 +9,7 @@ import {
   WeeklyBoardSummary,
   WeeklyBoardData,
 } from "@/lib/types";
+import { getAuthTokenValue } from "./_core";
 
 interface CommunicationHealthResponse {
   summary: {
@@ -42,11 +43,11 @@ interface CommunicationHealthResponse {
 
 interface FollowupsResponse {
   followUps: Array<{
-    followUpId: string;
+    followUpId?: string;
     leaderUserId: string;
-    leaderName: string;
+    leaderName?: string;
     title: string;
-    ownerGvUserId: string;
+    ownerGvUserId?: string;
     ownerName?: string;
     status: "OPEN" | "IN_PROGRESS" | "BLOCKED" | "RESOLVED" | "IGNORED";
     dueDate: string;
@@ -132,6 +133,20 @@ function normalizeFollowupSource(
   return "manual";
 }
 
+async function getCurrentGvUserId(): Promise<string | null> {
+  const token = await getAuthTokenValue();
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+  try {
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(Buffer.from(payload, "base64").toString("utf8"));
+    return decoded.gvUserId || decoded.id || decoded.userId || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getCommunicationHealth(days = 14) {
   const data = await apiFetch<CommunicationHealthResponse>(
     `/globalview/communication/health?days=${days}`
@@ -175,20 +190,38 @@ export async function getCommunicationHealth(days = 14) {
   return { summary, notContacted, highVolumeLowContact };
 }
 
-export async function getFollowups(): Promise<FollowUp[]> {
+export async function getFollowups(options?: {
+  ownerGvUserId?: string;
+  status?: "OPEN" | "IN_PROGRESS" | "BLOCKED" | "RESOLVED" | "IGNORED";
+  dueBefore?: string;
+  page?: number;
+  limit?: number;
+}): Promise<FollowUp[]> {
+  const params = new URLSearchParams();
+  const ownerFromToken =
+    options?.ownerGvUserId || (await getCurrentGvUserId());
+  if (ownerFromToken) params.set("ownerGvUserId", ownerFromToken);
+  if (options?.status) params.set("status", options.status);
+  if (options?.dueBefore) params.set("dueBefore", options.dueBefore);
+  if (options?.page) params.set("page", String(options.page));
+  if (options?.limit) params.set("limit", String(options.limit));
+
+  const query = params.toString();
   const data = await apiFetch<FollowupsResponse>(
-    "/globalview/communication/followups"
+    `/globalview/communication/followups${query ? `?${query}` : ""}`
   );
 
   return data.followUps.map((f) => ({
-    id: f.followUpId,
+    id:
+      f.followUpId ||
+      `${f.leaderUserId}-${f.dueDate}-${f.title}`.replace(/\s+/g, "-"),
     leaderId: f.leaderUserId,
-    leaderName: f.leaderName,
+    leaderName: f.leaderName || f.leaderUserId,
     taskDescription: f.title,
-    owner: f.ownerName || f.ownerGvUserId,
+    owner: f.ownerName || f.ownerGvUserId || "Unassigned",
     dueDate: f.dueDate,
     status: normalizeFollowupStatus(f.status, f.dueDate),
-    source: normalizeFollowupSource(f.source),
+    source: f.source ? normalizeFollowupSource(f.source) : "manual",
   }));
 }
 
