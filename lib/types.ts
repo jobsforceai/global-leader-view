@@ -165,6 +165,7 @@ export interface BiLeaderScorecard {
   city: string;
   market: string;
   businessVolume: number;
+  lifetimeBusinessVolume?: number | null;
   reinvestmentRate: number | null;
   retentionRate: number | null;
   growthPercent: number;

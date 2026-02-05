@@ -71,6 +71,7 @@ interface LeaderScorecardsResponse {
     region: string;
     city: string;
     businessVolume: number;
+    lifetimeBusinessVolume?: number | null;
     reinvestmentRate: number | null;
     retentionRate: number | null;
     growthPercent: number;
@@ -162,12 +163,14 @@ export async function getVolumeTrends(
 export async function getTopLeaders(
   startDate?: string,
   endDate?: string,
-  mode: "self" | "team" = "self"
+  mode: "self" | "team" = "self",
+  window?: "lifetime"
 ): Promise<LeaderSnapshot[]> {
   const params = new URLSearchParams();
   if (startDate) params.set("startDate", startDate);
   if (endDate) params.set("endDate", endDate);
   params.set("mode", mode);
+  if (window === "lifetime") params.set("window", "lifetime");
 
   const data = await apiFetch<TopLeadersResponse>(
     `/globalview/bi/top-leaders?${params.toString()}`
@@ -264,6 +267,7 @@ export async function getLeaderScorecards(
     city: leader.city,
     market: [leader.country, leader.region, leader.city].filter(Boolean).join(" - "),
     businessVolume: leader.businessVolume,
+    lifetimeBusinessVolume: leader.lifetimeBusinessVolume ?? null,
     reinvestmentRate: leader.reinvestmentRate,
     retentionRate: leader.retentionRate,
     growthPercent: leader.growthPercent,

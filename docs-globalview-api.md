@@ -493,8 +493,9 @@ Response (200):
       "region": "South",
       "city": "Hyderabad",
       "businessVolume": 4500,
-      "reinvestmentRate": null,
-      "retentionRate": null,
+      "lifetimeBusinessVolume": 12500,
+      "reinvestmentRate": 120,
+      "retentionRate": 100,
       "growthPercent": 25,
       "consistencyIndicator": null,
       "teamSize": 3,
@@ -570,6 +571,7 @@ Query params:
 - `startDate`, `endDate`
 - `limit`
 - `mode` (self | team) — default `self`
+- `window` (period | lifetime) — default `period`
 
 Response (200):
 ```
@@ -589,8 +591,10 @@ Response (200):
 ```
 
 Notes:
-- `mode=self` returns the leader’s own business volume for the period.
-- `mode=team` returns **team business volume excluding the leader’s own** (downline only).
+- `mode=self` returns the leader’s own business volume for the selected window.
+- `mode=team` returns **team** business volume excluding the leader’s own (downline only) for the selected window.
+- `window=period` uses `startDate/endDate` (default: current month).
+- `window=lifetime` ignores date filters.
 
 ### GET /globalview/bi/stagnating-leaders
 Leaders with flat/negative growth.
@@ -948,6 +952,18 @@ Response (200):
 
 ### POST /admin/globalview/cache/clear
 Super Admin only. Clear all Global View cache keys.
+
+Response (200):
+```
+{ "message": "Global View cache cleared." }
+```
+
+---
+
+## Global View Cache (No Auth)
+
+### POST /globalview/cache/clear
+Clear all Global View cache keys.
 
 Response (200):
 ```

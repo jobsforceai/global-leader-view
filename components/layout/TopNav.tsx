@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Globe, Calendar, User, Moon, Sun, LogOut } from "lucide-react";
+import { Globe, Calendar, User, Moon, Sun, LogOut, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -31,6 +31,8 @@ export function TopNav({
   sidebarCollapsed,
 }: TopNavProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isClearingCache, setIsClearingCache] = useState(false);
+  const [cacheMessage, setCacheMessage] = useState<string | null>(null);
   const timeRangeLabel =
     TIME_RANGE_OPTIONS.find((opt) => opt.value === selectedTimeRange)?.label ||
     "Select";
@@ -52,6 +54,27 @@ export function TopNav({
       await fetch("/api/gv/logout", { method: "POST" });
     } finally {
       window.location.href = "/login";
+    }
+  };
+
+  const handleClearCache = async () => {
+    setIsClearingCache(true);
+    setCacheMessage(null);
+    try {
+      const res = await fetch("/api/gv/cache/clear", { method: "POST" });
+      if (!res.ok) {
+        throw new Error("Failed to clear cache");
+      }
+      const data = await res.json();
+      setCacheMessage(data?.message || "Cache cleared");
+      setTimeout(() => setCacheMessage(null), 2500);
+    } catch (err) {
+      setCacheMessage(
+        err instanceof Error ? err.message : "Failed to clear cache"
+      );
+      setTimeout(() => setCacheMessage(null), 2500);
+    } finally {
+      setIsClearingCache(false);
     }
   };
 
@@ -128,6 +151,27 @@ export function TopNav({
               <User className="h-3 w-3" />
               {roleDisplayName[userRole]}
             </Badge>
+          </div>
+
+          {/* Cache Clear */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-2"
+              onClick={handleClearCache}
+              disabled={isClearingCache}
+            >
+              <RotateCcw className="h-4 w-4" />
+              <span className="hidden sm:inline">
+                {isClearingCache ? "Clearing..." : "Clear Cache"}
+              </span>
+            </Button>
+            {cacheMessage && (
+              <span className="hidden md:inline text-xs text-muted-foreground">
+                {cacheMessage}
+              </span>
+            )}
           </div>
 
           {/* Logout */}

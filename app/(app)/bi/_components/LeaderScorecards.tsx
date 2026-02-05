@@ -39,6 +39,7 @@ import { formatCurrency, cn } from "@/lib/utils";
 
 interface LeaderScorecardsProps {
   leaders: BiLeaderScorecard[];
+  windowMode?: "period" | "lifetime";
 }
 
 const consistencyColors = {
@@ -87,7 +88,7 @@ function MetricCard({
   );
 }
 
-export function LeaderScorecards({ leaders }: LeaderScorecardsProps) {
+export function LeaderScorecards({ leaders, windowMode = "period" }: LeaderScorecardsProps) {
   const [selectedLeaderId, setSelectedLeaderId] = useState<string>(
     leaders[0]?.id || ""
   );
@@ -182,13 +183,33 @@ export function LeaderScorecards({ leaders }: LeaderScorecardsProps) {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <MetricCard
-                  icon={<TrendingUp className="h-4 w-4 text-green-500" />}
-                  label="Business Volume"
-                  value={selectedLeader.businessVolume / 1000}
-                  suffix="K"
-                  trend={selectedLeader.growthPercent > 0 ? "up" : "down"}
-                />
+                <div className="rounded-lg border p-3 space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                    <span>
+                      Business Volume
+                      <span className="ml-1 text-[10px] uppercase tracking-wide">
+                        {windowMode === "lifetime" ? "lifetime" : "period"}
+                      </span>
+                    </span>
+                  </div>
+                  <p
+                    className={cn(
+                      "text-lg font-bold",
+                      selectedLeader.growthPercent > 0 ? "text-green-500" : "text-red-500"
+                    )}
+                  >
+                    {windowMode === "lifetime"
+                      ? selectedLeader.lifetimeBusinessVolume === null ||
+                        selectedLeader.lifetimeBusinessVolume === undefined
+                        ? "--"
+                        : formatCurrency(selectedLeader.lifetimeBusinessVolume)
+                      : formatCurrency(selectedLeader.businessVolume)}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {windowMode === "lifetime" ? "Lifetime total" : "Selected period"}
+                  </p>
+                </div>
                 <MetricCard
                   icon={<RefreshCw className="h-4 w-4 text-blue-500" />}
                   label="Reinvestment Rate"
@@ -265,48 +286,54 @@ export function LeaderScorecards({ leaders }: LeaderScorecardsProps) {
               {/* Volume Trend Chart */}
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold">Volume Trend</h4>
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                      data={selectedLeader.volumeTrend}
-                      margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                    >
-                      <defs>
-                        <linearGradient id="leaderGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis
-                        dataKey="date"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-                        tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--background))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
-                        }}
-                        formatter={(value) => [formatCurrency(value as number), "Volume"]}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="value"
-                        stroke="hsl(var(--primary))"
-                        fill="url(#leaderGradient)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+                {selectedLeader.volumeTrend.length === 0 ? (
+                  <div className="h-40 rounded-lg border bg-muted/30 flex items-center justify-center text-sm text-muted-foreground">
+                    No volume trend data available for this window.
+                  </div>
+                ) : (
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={selectedLeader.volumeTrend}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                      >
+                        <defs>
+                          <linearGradient id="leaderGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis
+                          dataKey="date"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                        />
+                        <YAxis
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                          tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--background))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "8px",
+                          }}
+                          formatter={(value) => [formatCurrency(value as number), "Volume"]}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="hsl(var(--primary))"
+                          fill="url(#leaderGradient)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
 
               <Separator />
