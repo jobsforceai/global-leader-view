@@ -297,3 +297,121 @@ export interface CampaignImpact {
   changePercent: number;
   trend: Array<{ date: string; metrics: { volume: number } }>;
 }
+
+// ── Leader Performance ──
+
+export type GapFlag = "NOT_CONTACTED" | "DECLINING" | "INACTIVE";
+
+export interface LeaderPerformanceRow {
+  userId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  country: string;
+  region: string;
+  city: string;
+  roleType: string | null;
+  preferredChannel: string | null;
+  status: string;
+  businessVolume: number;
+  growthPercent: number;
+  teamSize: number;
+  activeLegsCount: number;
+  totalInvested: number;
+  capTotal: number;
+  capRemaining: number;
+  lastContactAt: string | null;
+  daysSinceContact: number | null;
+  lastActivityAt: string | null;
+  gapFlags: GapFlag[];
+}
+
+export interface LeaderPerformanceGridData {
+  leaders: LeaderPerformanceRow[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+  };
+}
+
+export interface LeaderPerformanceDetail {
+  leader: {
+    userId: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    country: string;
+    region: string;
+    city: string;
+    isPackageActive: boolean;
+    packageUSD: number;
+    lastActivityAt: string | null;
+    roleType: string | null;
+    preferredChannel: string | null;
+    managerUserId: string | null;
+    notes: string | null;
+    tags: string[];
+  };
+  scorecard: {
+    businessVolume: number;
+    lifetimeBusinessVolume: number;
+    growthPercent: number;
+    reinvestmentRate: number | null;
+    retentionRate: number | null;
+    teamSize: number;
+    activeLegsCount: number;
+  };
+  finance: {
+    totalInvested: number;
+    capTotal: number;
+    capRemaining: number;
+  };
+  volumeTrend: VolumeDataPoint[];
+  legStrength: {
+    threshold: number;
+    strong: Array<{ userId: string; fullName: string; volume: number }>;
+    weak: Array<{ userId: string; fullName: string; volume: number }>;
+  } | null;
+  communicationSummary: {
+    lastContactAt: string | null;
+    daysSinceContact: number | null;
+    totalLogs: number;
+  };
+  recentFollowUps: Array<{
+    id: string;
+    title: string;
+    dueDate: string;
+    status: string;
+    notes: string | null;
+  }>;
+  callAttendance: {
+    totalCalls: number;
+    attended: number;
+    attendanceRate: number;
+    avgParticipationScore: number | null;
+    lastAttendedAt: string | null;
+    noShowStreak: number;
+  };
+  team: Array<{
+    userId: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    country: string;
+    region: string;
+    city: string;
+    leg: "direct" | "indirect";
+    isPackageActive: boolean;
+    businessVolume: number;
+    lastActivityAt: string | null;
+  }>;
+  gapAnalysis: {
+    inactiveTeamMembers: number;
+    decliningVolume: boolean;
+    notContactedDays: number | null;
+    weakLegs: number;
+    totalTeamMembers: number;
+    activeTeamMembers: number;
+  };
+}
