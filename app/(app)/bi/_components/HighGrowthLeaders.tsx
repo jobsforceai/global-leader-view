@@ -98,6 +98,9 @@ export function HighGrowthLeaders({ leaders }: HighGrowthLeadersProps) {
                       <TableCell>
                         <div>
                           <p className="font-medium">{leader.name}</p>
+                          <p className="text-xs text-muted-foreground font-mono">
+                            {leader.id}
+                          </p>
                           <p className="text-xs text-muted-foreground md:hidden">
                             {leader.market}
                           </p>
@@ -138,6 +141,8 @@ export function HighGrowthLeaders({ leaders }: HighGrowthLeadersProps) {
           <SheetHeader>
             <SheetTitle>{selectedLeader?.name}</SheetTitle>
             <SheetDescription>
+              <span className="font-mono">{selectedLeader?.id}</span>
+              {" · "}
               {selectedLeader?.market}
             </SheetDescription>
           </SheetHeader>

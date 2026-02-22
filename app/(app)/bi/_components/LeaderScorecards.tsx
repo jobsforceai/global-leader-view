@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   AreaChart,
   Area,
@@ -17,15 +17,16 @@ import {
   RefreshCw,
   UserCheck,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Sheet,
   SheetContent,
@@ -89,180 +90,116 @@ function MetricCard({
 }
 
 export function LeaderScorecards({ leaders, windowMode = "period" }: LeaderScorecardsProps) {
-  const [selectedLeaderId, setSelectedLeaderId] = useState<string>(
-    leaders[0]?.id || ""
-  );
-  const [showDrawer, setShowDrawer] = useState(false);
+  const [selectedLeader, setSelectedLeader] = useState<BiLeaderScorecard | null>(null);
 
-  useEffect(() => {
-    if (!leaders.length) {
-      setSelectedLeaderId("");
-      setShowDrawer(false);
-      return;
-    }
-
-    if (!leaders.find((leader) => leader.id === selectedLeaderId)) {
-      setSelectedLeaderId(leaders[0].id);
-    }
-  }, [leaders, selectedLeaderId]);
-
-  const selectedLeader = leaders.find((l) => l.id === selectedLeaderId);
   const statusKey = selectedLeader?.status || "active";
-  const consistencyKey =
-    selectedLeader?.consistencyIndicator || "consistent";
+  const consistencyKey = selectedLeader?.consistencyIndicator || "consistent";
   const lastContactDays = selectedLeader?.lastContactDays ?? null;
-
-  const handleLeaderSelect = (id: string) => {
-    setSelectedLeaderId(id);
-    setShowDrawer(true);
-  };
 
   return (
     <>
-      <div className="space-y-6">
-        {/* Leader Selector */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">
-              Select Leader
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Select value={selectedLeaderId} onValueChange={handleLeaderSelect}>
-              <SelectTrigger className="w-full md:w-[300px]">
-                <SelectValue placeholder="Select a leader" />
-              </SelectTrigger>
-              <SelectContent>
-                {leaders.map((leader) => (
-                  <SelectItem key={leader.id} value={leader.id}>
-                    <div className="flex items-center gap-2">
-                      <span>{leader.name}</span>
-                      <span className="text-muted-foreground text-xs">
-                        ({leader.market})
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
-
-        {/* Scorecard Preview */}
-        {selectedLeader ? (
-          <Card
-            className="cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={() => setShowDrawer(true)}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg">{selectedLeader.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedLeader.market}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className={cn("capitalize", statusColors[statusKey])}
-                  >
-                    {selectedLeader.status}
-                  </Badge>
-                  <Badge
-                    variant="secondary"
-                    className={cn(
-                      "capitalize",
-                      consistencyColors[consistencyKey]
-                    )}
-                  >
-                    {selectedLeader.consistencyIndicator || "unknown"}
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="rounded-lg border p-3 space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                    <span>
-                      Business Volume
-                      <span className="ml-1 text-[10px] uppercase tracking-wide">
-                        {windowMode === "lifetime" ? "lifetime" : "period"}
-                      </span>
-                    </span>
-                  </div>
-                  <p
-                    className={cn(
-                      "text-lg font-bold",
-                      selectedLeader.growthPercent > 0 ? "text-green-500" : "text-red-500"
-                    )}
-                  >
-                    {windowMode === "lifetime"
-                      ? selectedLeader.lifetimeBusinessVolume === null ||
-                        selectedLeader.lifetimeBusinessVolume === undefined
-                        ? "--"
-                        : formatCurrency(selectedLeader.lifetimeBusinessVolume)
-                      : formatCurrency(selectedLeader.businessVolume)}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {windowMode === "lifetime" ? "Lifetime total" : "Selected period"}
-                  </p>
-                </div>
-                <MetricCard
-                  icon={<RefreshCw className="h-4 w-4 text-blue-500" />}
-                  label="Reinvestment Rate"
-                  value={selectedLeader.reinvestmentRate}
-                  suffix="%"
-                  trend={
-                    selectedLeader.reinvestmentRate === null
-                      ? "neutral"
-                      : selectedLeader.reinvestmentRate > 60
-                      ? "up"
-                      : "down"
-                  }
-                />
-                <MetricCard
-                  icon={<UserCheck className="h-4 w-4 text-purple-500" />}
-                  label="Retention Rate"
-                  value={selectedLeader.retentionRate}
-                  suffix="%"
-                  trend={
-                    selectedLeader.retentionRate === null
-                      ? "neutral"
-                      : selectedLeader.retentionRate > 85
-                      ? "up"
-                      : "down"
-                  }
-                />
-                <MetricCard
-                  icon={<Users className="h-4 w-4 text-amber-500" />}
-                  label="Team Size"
-                  value={selectedLeader.teamSize}
-                  trend="neutral"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-4">
-                Click to view full scorecard →
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="py-8 text-center text-sm text-muted-foreground">
+      <Card>
+        <CardContent className="pt-4 pb-2">
+          {leaders.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
               No leaders found for this search.
-            </CardContent>
-          </Card>
-        )}
-      </div>
+            </div>
+          ) : (
+            <div className="rounded-md border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Leader</TableHead>
+                    <TableHead className="hidden md:table-cell">Market</TableHead>
+                    <TableHead className="hidden sm:table-cell">Status</TableHead>
+                    <TableHead>Volume</TableHead>
+                    <TableHead className="hidden sm:table-cell">Growth</TableHead>
+                    <TableHead className="hidden lg:table-cell">Team</TableHead>
+                    <TableHead className="hidden lg:table-cell">Consistency</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {leaders.map((leader) => (
+                    <TableRow
+                      key={leader.id}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => setSelectedLeader(leader)}
+                    >
+                      <TableCell className="font-medium">
+                        <div>
+                          <p>{leader.name}</p>
+                          <p className="text-xs text-muted-foreground font-mono">
+                            {leader.id}
+                          </p>
+                          <p className="text-xs text-muted-foreground md:hidden">
+                            {leader.market}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">
+                        {leader.market}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge
+                          variant="secondary"
+                          className={cn("capitalize", statusColors[leader.status])}
+                        >
+                          {leader.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {windowMode === "lifetime"
+                          ? leader.lifetimeBusinessVolume == null
+                            ? "--"
+                            : formatCurrency(leader.lifetimeBusinessVolume)
+                          : formatCurrency(leader.businessVolume)}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <span
+                          className={cn(
+                            "font-bold",
+                            leader.growthPercent > 0 ? "text-green-500" : "text-red-500"
+                          )}
+                        >
+                          {leader.growthPercent > 0 ? "+" : ""}
+                          {leader.growthPercent}%
+                        </span>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {leader.teamSize}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {leader.consistencyIndicator && (
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              "capitalize",
+                              consistencyColors[leader.consistencyIndicator]
+                            )}
+                          >
+                            {leader.consistencyIndicator}
+                          </Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Detailed Scorecard Drawer */}
-      <Sheet open={showDrawer} onOpenChange={setShowDrawer}>
+      <Sheet open={!!selectedLeader} onOpenChange={() => setSelectedLeader(null)}>
         <SheetContent className="sm:max-w-lg overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{selectedLeader?.name}</SheetTitle>
-            <SheetDescription>{selectedLeader?.market}</SheetDescription>
+            <SheetDescription>
+              <span className="font-mono">{selectedLeader?.id}</span>
+              {" · "}
+              {selectedLeader?.market}
+            </SheetDescription>
           </SheetHeader>
 
           {selectedLeader && (
@@ -343,6 +280,26 @@ export function LeaderScorecards({ leaders, windowMode = "period" }: LeaderScore
                 <h4 className="text-sm font-semibold">Key Metrics</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">
+                      Business Volume
+                      <span className="ml-1 text-[10px] uppercase tracking-wide">
+                        {windowMode === "lifetime" ? "lifetime" : "period"}
+                      </span>
+                    </p>
+                    <p
+                      className={cn(
+                        "text-xl font-bold",
+                        selectedLeader.growthPercent > 0 ? "text-green-500" : "text-red-500"
+                      )}
+                    >
+                      {windowMode === "lifetime"
+                        ? selectedLeader.lifetimeBusinessVolume == null
+                          ? "--"
+                          : formatCurrency(selectedLeader.lifetimeBusinessVolume)
+                        : formatCurrency(selectedLeader.businessVolume)}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/50">
                     <p className="text-xs text-muted-foreground">Reinvestment %</p>
                     <p className="text-xl font-bold">
                       {selectedLeader.reinvestmentRate === null
@@ -372,10 +329,27 @@ export function LeaderScorecards({ leaders, windowMode = "period" }: LeaderScore
                       {selectedLeader.growthPercent}%
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg bg-muted/50">
-                    <p className="text-xs text-muted-foreground">Team Size</p>
-                    <p className="text-xl font-bold">{selectedLeader.teamSize}</p>
-                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <MetricCard
+                    icon={<Users className="h-4 w-4 text-amber-500" />}
+                    label="Team Size"
+                    value={selectedLeader.teamSize}
+                    trend="neutral"
+                  />
+                  <MetricCard
+                    icon={<UserCheck className="h-4 w-4 text-purple-500" />}
+                    label="Retention Rate"
+                    value={selectedLeader.retentionRate}
+                    suffix="%"
+                    trend={
+                      selectedLeader.retentionRate === null
+                        ? "neutral"
+                        : selectedLeader.retentionRate > 85
+                        ? "up"
+                        : "down"
+                    }
+                  />
                 </div>
               </div>
 
@@ -410,16 +384,6 @@ export function LeaderScorecards({ leaders, windowMode = "period" }: LeaderScore
                   <span className="text-sm font-medium text-muted-foreground">
                     {selectedLeader.lastActivityAt || "--"}
                   </span>
-                </div>
-              </div>
-
-              {/* Period Comparison */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold">Period Comparison</h4>
-                <div className="p-4 rounded-lg border bg-muted/50 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    Current vs Previous Period comparison placeholder
-                  </p>
                 </div>
               </div>
 
